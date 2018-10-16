@@ -1,0 +1,22 @@
+Common subdirectories: a/cmake and b/cmake
+diff -u a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt	2018-10-02 13:58:57.564955784 +0900
++++ b/CMakeLists.txt	2018-10-02 14:07:06.900568083 +0900
+@@ -9,7 +9,7 @@
+ 
+ set(SOEM_INCLUDE_INSTALL_DIR include/soem)
+ set(SOEM_LIB_INSTALL_DIR lib)
+-set(BUILD_TESTS TRUE)
++set(BUILD_TESTS FALSE)
+ 
+ if(WIN32)
+   set(OS "win32")
+@@ -60,7 +60,7 @@
+ include_directories(osal/${OS})
+ include_directories(oshw/${OS})
+ 
+-add_library(soem STATIC
++add_library(soem SHARED
+   ${SOEM_SOURCES}
+   ${OSAL_SOURCES}
+   ${OSHW_SOURCES}
