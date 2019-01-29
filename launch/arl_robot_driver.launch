@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+
+  <!-- Driver parameters -->
+  <rosparam command="load" file="$(find arl_hw_ethercat)/config/driver.yaml" />
+
+  <!-- Robot Driver -->
+  <node pkg="arl_hw_ethercat" type="arl_driver_node" name="arl_driver_node" />
+
+</launch>

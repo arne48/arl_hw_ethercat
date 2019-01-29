@@ -1,0 +1,85 @@
+ethercat_iface_name: eth0 #default: eth0
+
+min_acceptable_rt_loop_frequency: 490.0
+
+halt_on_slow_rt_loop: false
+
+publish_every_rt_jitter: false
+
+number_of_controller_boards: 1
+
+analog_inputs:
+  - name: analog_input_1
+    controller_board: 0 #0....{number_of_controller_boards - 1}
+    controller_channel: 0 #0.....31
+    publish_muscle: false
+  - name: analog_input_2
+    controller_board: 0
+    controller_channel: 1
+    publish_muscle: false
+
+muscle_list:
+  - name: muscle_1
+    initial_value: 0.0
+  - name: muscle_2
+    initial_value: 0.0
+  - name: muscle_3
+    initial_value: 0.0
+  - name: muscle_4
+    initial_value: 0.0
+  - name: muscle_5
+    initial_value: 0.0
+  - name: muscle_6
+    initial_value: 0.0
+  - name: muscle_7
+    initial_value: 0.0
+  - name: muscle_8
+    initial_value: 0.0
+  - name: muscle_9
+    initial_value: 0.0
+  - name: muscle_10
+    initial_value: 0.0
+  - name: muscle_11
+    initial_value: 0.0
+  - name: muscle_12
+    initial_value: 0.0
+  - name: muscle_13
+    initial_value: 0.0
+  - name: muscle_14
+    initial_value: 0.0
+  - name: muscle_15
+    initial_value: 0.0
+  - name: muscle_16
+    initial_value: 0.0
+  - name: muscle_17
+    initial_value: 0.0
+  - name: muscle_18
+    initial_value: 0.0
+  - name: muscle_19
+    initial_value: 0.0
+  - name: muscle_20
+    initial_value: 0.0
+  - name: muscle_21
+    initial_value: 0.0
+  - name: muscle_22
+    initial_value: 0.0
+  - name: muscle_23
+    initial_value: 0.0
+  - name: muscle_24
+    initial_value: 0.0
+  - name: muscle_25
+    initial_value: 0.0
+  - name: muscle_26
+    initial_value: 0.0
+  - name: muscle_27
+    initial_value: 0.0
+  - name: muscle_28
+    initial_value: 0.0
+  - name: muscle_29
+    initial_value: 0.0
+  - name: muscle_30
+    initial_value: 0.0
+  - name: muscle_31
+    initial_value: 0.0
+  - name: muscle_32
+    initial_value: 0.0
