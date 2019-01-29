@@ -1,19 +1,29 @@
 cmake_minimum_required(VERSION 3.2.0)
 project(arl_hw_ethercat)
 include(ExternalProject)
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 14)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -O0 -g")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
+
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  std_msgs
-  std_srvs
+        control_toolbox
+        controller_manager
+        diagnostic_updater
+        hardware_interface
+        arl_controllers
+        arl_interfaces
+        arl_hw_msgs
+        realtime_tools
+        roscpp
+        std_srvs
 )
+
+find_package (Threads REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system thread)
 
 ###################################
 ## catkin specific configuration ##
@@ -21,7 +31,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES arl_hw_ethercat
-#  CATKIN_DEPENDS roscpp std_msgs std_srvs
+  CATKIN_DEPENDS control_toolbox controller_manager hardware_interface roscpp
 #  DEPENDS system_lib
 )
 
@@ -40,9 +50,21 @@ include_directories(
   ${CATKIN_DEVEL_PREFIX}/include
 )
 
-add_executable(arl_ethercat_test src/ethercat_master_test.cpp)
+add_library(arl_robot src/robot.cpp src/ethercat_master.cpp)
+target_link_libraries(arl_robot ${catkin_LIBRARIES} ${CATKIN_DEVEL_PREFIX}/lib/libsoem.so)
+
+add_executable(arl_driver_node src/driver.cpp src/driver_utils.cpp src/rt_history.cpp)
+target_link_libraries(arl_driver_node
+        rt
+        arl_robot
+        ${catkin_LIBRARIES}
+        ${Boost_LIBRARIES}
+)
+
+
+add_executable(arl_ethercat_test tests/ethercat_master_test.cpp)
 add_dependencies(arl_ethercat_test soem-lib)
 target_link_libraries(arl_ethercat_test
         ${catkin_LIBRARIES}
         ${CATKIN_DEVEL_PREFIX}/lib/libsoem.so
-        )
+)
