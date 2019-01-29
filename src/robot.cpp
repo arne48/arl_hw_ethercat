@@ -2,18 +2,19 @@
 
 ARLRobot::ARLRobot()
 {
-  initialized = false;
-  ec_master = new EtherCATMaster();
+  initialized_ = false;
+  ec_master_ = new EtherCATMaster();
 }
 
 ARLRobot::~ARLRobot()
 {
-  if (!initialized)
+  if (!initialized_)
   {
     ROS_WARN("Robot not initialized, nothing to close");
     return;
   }
-  //TODO call Robot::close
+
+  close();
 }
 
 void ARLRobot::initialize(ros::NodeHandle nh)
@@ -21,15 +22,10 @@ void ARLRobot::initialize(ros::NodeHandle nh)
 
   getConfigurationFromParameterServer(nh);
 
-  if (true)
-  {
-    initialized = true;
-  }
-
   number_of_muscles_ = driver_config.number_of_controller_boards * 32;
 
 
-  for (unsigned int i = 0; i < number_of_muscles_; i++)
+  for (int i = 0; i < number_of_muscles_; i++)
   {
     arl_interfaces::MuscleHandle muscle_handle(muscle_names_[i], &desired_pressures_[i], &current_pressures_[i], &tensions_[i],
                                                &activations_[i], &tensions_filtered_[i], &control_modes_[i]);
@@ -39,8 +35,12 @@ void ARLRobot::initialize(ros::NodeHandle nh)
   registerInterface(&muscle_interface);
 
   //TODO
-  //Set all controllers to blow-off activation
-  //dev_->write(&desired_pressures_, &activations_, &control_modes_);
+  if (ec_master_->initialize(driver_config.ethercat_iface_name))
+  {
+    initialized_ = true;
+  }
+
+  ec_master_->write(activations_);
   //Maybe send twice
 
   emergency_stop = false;
@@ -49,41 +49,33 @@ void ARLRobot::initialize(ros::NodeHandle nh)
 void ARLRobot::close()
 {
   //TODO
-
-  ROS_INFO("device uninitialized");
+  ec_master_->close();
 }
 
 void ARLRobot::read(const ros::Time &time, const ros::Duration &period)
 {
-  if (!initialized)
+  if (!initialized_)
   {
-    ROS_WARN("Robot not initialized, no data can be read");
+    ROS_WARN_ONCE("Robot not initialized, no data can be read");
     return;
   }
-  //ROS_INFO("Read data");
-  //TODO
-  // Read from EtherCAT
-  /*
-  * Read current pressures, and tensions (filtered tensions come from individual controllers)
-  */
 
-  /*
-  * Copy values for usage as analog inputs
-  */
+  //TODO read also converts to MPa and Volts
+  ec_master_->read(current_pressures_, tensions_, tensions_filtered_, analog_input_values_, analog_input_indicies_);
 
   //ROS_DEBUG("READ with %f hz", 1 / period.toSec());
 }
 
 void ARLRobot::write(const ros::Time &time, const ros::Duration &period)
 {
-  if (!initialized)
+  if (!initialized_)
   {
-    ROS_WARN("Robot not initialized, no data can be read");
+    ROS_WARN_ONCE("Robot not initialized, no data can be written");
     return;
   }
-  //ROS_INFO("Write data");
+
   //TODO
-  // Write activations with EtherCAT
+  ec_master_->write(activations_);
 
   //ROS_DEBUG("WRITE with %f hz", 1 / period.toSec());
 }
@@ -115,7 +107,7 @@ void ARLRobot::getConfigurationFromParameterServer(ros::NodeHandle nh)
   }
 
   /* define all muscles */
-  for (unsigned int i = 0; i < muscle_list.size(); ++i)
+  for (int i = 0; i < muscle_list.size(); ++i)
   {
     if (!muscle_list[i].hasMember("name") || !muscle_list[i].hasMember("initial_value"))
     {
@@ -160,7 +152,7 @@ void ARLRobot::getConfigurationFromParameterServer(ros::NodeHandle nh)
       ROS_DEBUG("Analog inputs list of size %d found", analog_inputs.size());
     }
 
-    for (unsigned int i = 0; i < analog_inputs.size(); ++i)
+    for (int i = 0; i < analog_inputs.size(); ++i)
     {
       if (!analog_inputs[i].hasMember("name") || !analog_inputs[i].hasMember("controller_channel") ||
           !analog_inputs[i].hasMember("controller_board") || !analog_inputs[i].hasMember("publish_muscle"))
@@ -240,32 +232,30 @@ void ARLRobot::executeEmergencyStop()
 {
   for (unsigned int i = 0; i < muscle_names_.size(); i++)
   {
-    //TODO
-    //dev_->emergency_stop(activation_controllers_[i]);
+    ec_master_->emergency_stop(i);
     desired_pressures_[i] = 0.0;
     activations_[i] = -1.0;
+    control_modes_[i] = arl_hw_msgs::MuscleCommand::CONTROL_MODE_BY_ACTIVATION;
   }
 }
 
 void ARLRobot::resetMuscles() {
   for (unsigned int i = 0; i < muscle_names_.size(); i++)
   {
-    //TODO
-    //dev_->reset_muscle(activation_controllers_[i]);
+    ec_master_->reset_muscle(i);
     desired_pressures_[i] = 0.0;
     activations_[i] = -1.0;
+    control_modes_[i] = arl_hw_msgs::MuscleCommand::CONTROL_MODE_BY_ACTIVATION;
   }
 }
 
 void ARLRobot::resetMuscle(std::string name) {
-  for (unsigned int i = 0; i < muscle_names_.size(); i++)
+  auto muscle_itr = muscle_index_map_.find(name);
+  if (muscle_itr != muscle_index_map_.end())
   {
-    if (muscle_names_[i] == name)
-    {
-      //TODO
-      //dev_->reset_muscle(activation_controllers_[i]);
-      desired_pressures_[i] = 0.0;
-      activations_[i] = -1.0;
-    }
+    ec_master_->reset_muscle(muscle_itr->second);
+    desired_pressures_[muscle_itr->second] = 0.0;
+    activations_[muscle_itr->second] = -1.0;
+    control_modes_[muscle_itr->second] = arl_hw_msgs::MuscleCommand::CONTROL_MODE_BY_ACTIVATION;
   }
 }

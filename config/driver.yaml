@@ -1,4 +1,4 @@
-ethercat_iface_name: eth0 #default: eth0
+ethercat_iface_name: enp7s0 #default: eth0
 
 min_acceptable_rt_loop_frequency: 490.0
 

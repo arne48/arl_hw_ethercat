@@ -159,7 +159,7 @@ void *controlLoop(void *)
 
       double end = driver_utils::get_now();
 
-      // Publishing diagnostics information
+      // Publishing diagnostics information if 1 sec has passed
       if ((end - last_published) > 1.0)
       {
         driver_utils::publishDiagnostics(publisher, driver_stats);
@@ -176,9 +176,9 @@ void *controlLoop(void *)
 
           musculature_state_publisher.msg_.muscle_states.clear();
           unsigned long muscle_number = robot.getNumberOfMuscles();
-          for (unsigned long idx = 0; idx < muscle_number; idx++)
+          for (unsigned long i = 0; i < muscle_number; i++)
           {
-            struct ARLRobot::muscle_info_t muscle_info = robot.getMuscleInfo(idx);
+            struct ARLRobot::muscle_info_t muscle_info = robot.getMuscleInfo(i);
             arl_hw_msgs::Muscle muscle_msg;
             muscle_msg.name = muscle_info.name;
             muscle_msg.activation = muscle_info.activation;
@@ -199,9 +199,9 @@ void *controlLoop(void *)
 
           analog_input_publisher.msg_.inputs.clear();
           unsigned long analog_input_number = robot.getNumberOfAnalogInputs();
-          for (unsigned long idx = 0; idx < analog_input_number; idx++)
+          for (unsigned long i = 0; i < analog_input_number; i++)
           {
-            struct ARLRobot::analog_input_info_t analog_input_info = robot.getAnalogInputInfo(idx);
+            struct ARLRobot::analog_input_info_t analog_input_info = robot.getAnalogInputInfo(i);
             arl_hw_msgs::AnalogInput input_msg;
             input_msg.name = analog_input_info.name;
             input_msg.voltage = analog_input_info.voltage;
@@ -244,6 +244,7 @@ void *controlLoop(void *)
   delete rtpublisher;
   robot.close();
 
+  return 0;
 }
 
 bool resetMusclesService(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &resp)

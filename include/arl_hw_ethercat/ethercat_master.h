@@ -3,7 +3,9 @@
 
 #include <vector>
 #include <set>
+#include <ros/console.h>
 #include <arl_hw_ethercat/datatypes.h>
+#include <soem/ethercat.h>
 
 class EtherCATMaster {
 public:
@@ -18,32 +20,20 @@ public:
   ~EtherCATMaster();
 
   /**
-   * Reads current robot state from hardware
-   * @param status_vec output parameter
-   * @param pressure_controllers
-   * @param tension_controllers
-   * @return success of command
+  TODO
    */
-  bool read(std::vector<arl_datatypes::muscle_status_data_t> &muscle_status_vec, std::vector<std::pair<int, int> > pressure_controllers,
-                    std::vector<std::pair<int, int> > tension_controllers, std::vector<arl_datatypes::analog_input_status_data_t> &analog_input_status_vec,
-                    std::vector<std::pair<int, int> > analog_inputs_controllers);
+  bool read(std::vector<double> &current_pressures, std::vector<double> &tensions, std::vector<double> &tensions_filtered,
+            std::vector<double> &analog_input_values, std::vector<int> analog_input_indicies);
 
   /**
-   * Writes robot command to hardware
-   * @param command_vec command to issue to hardware
-   * @return success of command
+  TODO
    */
-  bool write(std::vector<arl_datatypes::muscle_command_data_t> &command_vec);
+  bool write(std::vector<double> &activations);
 
   /**
-   * Initialize communication device
-   * @param pressure_controllers
-   * @param tension_controllers
-   * @return success of command
+  TODO
    */
-  bool initialize(std::vector<std::pair<int, int> > pressure_controllers,
-                          std::vector<std::pair<int, int> > tension_controllers,
-                          std::vector<std::pair<int, int> > analog_inputs_controllers);
+  bool initialize(std::string iface);
 
   /**
    * Cleanup to close communication device
@@ -54,15 +44,15 @@ public:
 
   /**
    * Blows off air from muscle
-   * @param muscle port of muscle to stop
+   * @param muscle to stop
    */
-  void emergency_stop(std::pair<int, int> muscle);
+  void emergency_stop(int muscle);
 
   /**
    * Resets muscle and blows off air
    * @param muscle
    */
-  void reset_muscle(std::pair<int, int> muscle);
+  void reset_muscle(int muscle);
 
 };
 

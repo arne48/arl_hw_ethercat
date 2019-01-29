@@ -123,8 +123,8 @@ public:
 
 private:
   arl_interfaces::MuscleInterface muscle_interface; /**< MuscleInterface for usage of MuscleController */
-  EtherCATMaster *ec_master;
-  bool initialized; /**< Saves if robot is already intialized*/
+  EtherCATMaster *ec_master_;
+  bool initialized_; /**< Saves if robot is already intialized*/
 
   int number_of_muscles_;
   std::vector<std::string> muscle_names_; /**< Internal datastructure which contains all muscle's names */
