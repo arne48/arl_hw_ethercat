@@ -38,8 +38,8 @@ catkin_package(
 
 ExternalProject_Add(soem-lib
         GIT_REPOSITORY https://github.com/OpenEtherCATsociety/SOEM
-        GIT_TAG master
-        PATCH_COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/patches/build_soem_shared.patch
+        GIT_TAG 4427684cc553d3b8a2b6c675693097cc12a424e4
+        PATCH_COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/patches/make_shared.patch
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CATKIN_DEVEL_PREFIX})
 
 ###########

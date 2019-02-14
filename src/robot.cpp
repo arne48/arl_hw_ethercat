@@ -61,7 +61,7 @@ void ARLRobot::read(const ros::Time &time, const ros::Duration &period)
   }
 
   //TODO read also converts to MPa and Volts
-  ec_master_->read(current_pressures_, tensions_, tensions_filtered_, analog_input_values_, analog_input_indicies_);
+  ec_master_->read(current_pressures_, tensions_);
 
   //ROS_DEBUG("READ with %f hz", 1 / period.toSec());
 }
@@ -74,7 +74,6 @@ void ARLRobot::write(const ros::Time &time, const ros::Duration &period)
     return;
   }
 
-  //TODO
   ec_master_->write(activations_);
 
   //ROS_DEBUG("WRITE with %f hz", 1 / period.toSec());

@@ -1,7 +1,6 @@
-Common subdirectories: a/cmake and b/cmake
 diff -u a/CMakeLists.txt b/CMakeLists.txt
---- a/CMakeLists.txt	2018-10-02 13:58:57.564955784 +0900
-+++ b/CMakeLists.txt	2018-10-02 14:07:06.900568083 +0900
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
 @@ -9,7 +9,7 @@
  
  set(SOEM_INCLUDE_INSTALL_DIR include/soem)

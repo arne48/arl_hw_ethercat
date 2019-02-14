@@ -1,7 +1,6 @@
 #include <cstdio>
 #include <cinttypes>
 #include <iostream>
-#include <ros/ros.h>
 #include <soem/ethercat.h>
 
 char IOmap[4096];
@@ -18,7 +17,7 @@ static inline void send_data()
   {
     inOP = TRUE;
     /* cyclic loop */
-    for(int i = 1; i <= 100000; i++)
+    for(int i = 1; i <= 10; i++)
     {
 
       ec_send_processdata();
@@ -30,7 +29,7 @@ static inline void send_data()
         for(int j = 0 ; j < oloop; j++)
         {
           printf(" %2.2x", *(ec_slave[0].outputs + j));
-          *(ec_slave[0].outputs + j) = 0xFF;
+          *(ec_slave[0].outputs + j) = 0xF0;
         }
 
         printf(" I:");
@@ -49,7 +48,7 @@ static inline void send_data()
   }
 }
 
-static inline void switch_into_oparational_state()
+static inline void switch_into_operational_state()
 {
   printf("Request operational state for all slaves\n");
   ec_slave[0].state = EC_STATE_OPERATIONAL;
@@ -125,7 +124,7 @@ int main(int argc, char **argv)
   }
 
   print_slave_details();
-  switch_into_oparational_state();
+  switch_into_operational_state();
   send_data();
   switch_into_init_state();
   ec_close();
