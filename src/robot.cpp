@@ -119,7 +119,7 @@ void ARLRobot::getConfigurationFromParameterServer(ros::NodeHandle nh)
   /* define all muscles */
   for (int i = 0; i < muscle_list.size(); ++i)
   {
-    if (!muscle_list[i].hasMember("name") || !muscle_list[i].hasMember("initial_value"))
+    if (!muscle_list[i].hasMember("name"))
     {
       ROS_ERROR("Definition not complete for muscle %d", i);
       continue;
@@ -129,12 +129,11 @@ void ARLRobot::getConfigurationFromParameterServer(ros::NodeHandle nh)
     {
       //Try to access all muscle fields first and safe them
       std::string name = std::string(muscle_list[i]["name"]);
-      double initial_value = muscle_list[i]["initial_value"];
 
-      ROS_DEBUG("Found on server %s at %f", name.c_str(), initial_value);
+      ROS_DEBUG("Found muscle on server: %s", name.c_str());
 
       muscle_names_.push_back(name);
-      desired_pressures_.push_back(initial_value);
+      desired_pressures_.push_back(0.0);
       current_pressures_.push_back(0.0);
       tensions_.push_back(0.0);
       activations_.push_back(-0.3);
