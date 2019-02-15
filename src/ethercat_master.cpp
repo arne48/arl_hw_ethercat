@@ -13,40 +13,43 @@ EtherCATMaster::~EtherCATMaster()
 
 }
 
-/**
-TODO
- */
 void EtherCATMaster::read(std::vector<double> &current_voltages, std::vector<double> &tensions)
 {
-  /*for (int i = 1; i <= ec_slavecount; i++)
-  {
-
-  }*/
-
-  ROS_INFO("Trying to read data");
   if (ec_slave[0].state == EC_STATE_OPERATIONAL )
   {
     ec_send_processdata();
     wkc = ec_receive_processdata(EC_TIMEOUTRET);
     if (wkc >= expectedWKC)
     {
-      ROS_INFO(" I:");
-      for (int j = PRESSURE_OFFSET; j < CONTROLLER_CHANNELS * PRESSURE_LEN ; j+=PRESSURE_LEN)
+      for (int slave_idx = 1; slave_idx <= ec_slavecount; slave_idx++)
       {
-        ROS_INFO("Pressure %d: %04X", j/PRESSURE_LEN, ec_slave[0].inputs[j] | ec_slave[0].inputs[j+1] << 8);
-      }
+        for (int input_idx_adc = PRESSURE_OFFSET; input_idx_adc < CONTROLLER_CHANNELS * PRESSURE_LEN; input_idx_adc += PRESSURE_LEN)
+        {
+          int pos = ((slave_idx-1)*CONTROLLER_CHANNELS) + (input_idx_adc / PRESSURE_LEN);
+          uint16_t adc_register_data = ec_slave[slave_idx].inputs[input_idx_adc] | ec_slave[slave_idx].inputs[input_idx_adc + 1] << 8;
+          double voltage = (10.0 / 32768.0) * adc_register_data;
+          current_voltages[pos] = voltage;
+          //ROS_INFO("Pressure %d: %04X", input_idx_adc / PRESSURE_LEN, ec_slave[slave_idx].inputs[input_idx_adc] | ec_slave[slave_idx].inputs[input_idx_adc + 1] << 8);
+        }
 
-      for (int j = TENSION_OFFSET; j < TENSION_OFFSET + (CONTROLLER_CHANNELS * TENSION_LEN); j+=TENSION_LEN)
-      {
-        ROS_INFO("Tension %d: %04X", (j-TENSION_OFFSET)/TENSION_LEN, ec_slave[0].inputs[j] | ec_slave[0].inputs[j+1] << 8 | ec_slave[0].inputs[j+2] << 16 | ec_slave[0].inputs[j+3] << 24);
+        for (int input_idx_tension = TENSION_OFFSET; input_idx_tension < TENSION_OFFSET + (CONTROLLER_CHANNELS * TENSION_LEN); input_idx_tension += TENSION_LEN)
+        {
+          int pos = ((slave_idx-1)*CONTROLLER_CHANNELS) + ((input_idx_tension - TENSION_OFFSET) / TENSION_LEN);
+          tensions[pos] = ec_slave[slave_idx].inputs[input_idx_tension] | ec_slave[slave_idx].inputs[input_idx_tension + 1] << 8 |
+                          ec_slave[slave_idx].inputs[input_idx_tension + 2] << 16 | ec_slave[slave_idx].inputs[input_idx_tension + 3] << 24;
+          //ROS_INFO("Tension %d: %04X", (input_idx_tension - TENSION_OFFSET) / TENSION_LEN,
+          //         ec_slave[slave_idx].inputs[input_idx_tension] | ec_slave[slave_idx].inputs[input_idx_tension + 1] << 8 | ec_slave[slave_idx].inputs[input_idx_tension + 2] << 16 | ec_slave[slave_idx].inputs[input_idx_tension + 3] << 24);
+        }
       }
     }
+  } else
+  {
+    ROS_ERROR_ONCE("EtherCAT: Not all slaves are operational");
   }
 }
 
 void EtherCATMaster::write(std::vector<double> &activations)
 {
-  //ROS_INFO("Trying to write data");
   if (ec_slave[0].state == EC_STATE_OPERATIONAL )
   {
     ec_send_processdata();
@@ -58,7 +61,8 @@ void EtherCATMaster::write(std::vector<double> &activations)
         for (int output_idx = ACTIVATION_OFFSET; output_idx < CONTROLLER_CHANNELS * ACTIVATION_LEN; output_idx += ACTIVATION_LEN)
         {
           //ROS_INFO("Activation %d: %04X", output_idx / ACTIVATION_LEN, ec_slave[slave_idx].outputs[output_idx] | ec_slave[slave_idx].outputs[output_idx + 1] << 8);
-          double activation = activations[((slave_idx-1)*CONTROLLER_CHANNELS) + (output_idx / ACTIVATION_LEN)];
+          int pos = ((slave_idx-1)*CONTROLLER_CHANNELS) + (output_idx / ACTIVATION_LEN);
+          double activation = activations[pos];
           uint16_t value = transfer_voltage(map_to_voltage(activation, -1, 1, 0, (AD5360_REF_VOLTAGE * 2)));
           ec_slave[slave_idx].outputs[output_idx] = (uint8_t) (value & 0x00FF);
           ec_slave[slave_idx].outputs[output_idx + 1] = (uint8_t) ((value & 0xFF00) >> 8);
@@ -67,7 +71,7 @@ void EtherCATMaster::write(std::vector<double> &activations)
     }
   } else
   {
-    ROS_ERROR("EtherCAT: Not all slaves are operational");
+    ROS_ERROR_ONCE("EtherCAT: Not all slaves are operational");
   }
 }
 
@@ -88,7 +92,7 @@ bool EtherCATMaster::initialize(std::string iface)
   ROS_INFO("SOEM found and configured %d slaves", ec_slavecount);
   for (int cnt = 1; cnt <= ec_slavecount; cnt++)
   {
-    ROS_INFO("Man: %8.8x ID: %8.8x Rev: %8.8x %s", (int)ec_slave[cnt].eep_man, (int)ec_slave[cnt].eep_id, (int)ec_slave[cnt].eep_rev, "Slave");
+    ROS_INFO("Slave %d: Man:%8.8X ID:%8.8X Rev:%8.8X", cnt, (int)ec_slave[cnt].eep_man, (int)ec_slave[cnt].eep_id, (int)ec_slave[cnt].eep_rev);
   }
 
   ec_config_map(&IOmap);
@@ -177,17 +181,17 @@ uint16_t EtherCATMaster::transfer_voltage(double voltage)
 {
   if (voltage == 0.0)
   {
-    return (uint16_t)pow(2, 16) / 2;
+    return 1 << 15;
   } else if (voltage <= (2 * AD5360_REF_VOLTAGE) * -1)
   {
     return 0;
   } else if (voltage >= (2 * AD5360_REF_VOLTAGE))
   {
-    return (uint16_t)pow(2, 16) - 1;
+    return (1 << 16) - 1;
   } else
   {
-    uint16_t base = pow(2, 16) / 2;
-    uint16_t value = fabs(voltage) / ((AD5360_REF_VOLTAGE * 2) / pow(2, 15));
+    uint16_t base = 1 << 15;
+    uint16_t value = fabs(voltage) / ((AD5360_REF_VOLTAGE * 2) / (1 << 15));
 
     if (voltage > 0)
     {

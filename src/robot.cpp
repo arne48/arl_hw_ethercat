@@ -60,8 +60,19 @@ void ARLRobot::read(const ros::Time &time, const ros::Duration &period)
     return;
   }
 
-  //TODO read also converts to MPa and Volts
   ec_master_->read(current_pressures_, tensions_);
+
+  //First: Copy voltages to analog_outputs before transfer to MPa
+  for(unsigned int i=0; i<analog_input_indices_.size(); i++)
+  {
+    analog_input_values_[i] = current_pressures_[analog_input_indices_[i]];
+  }
+
+  //Second: Convert to MPa in place
+  for(unsigned int i=0; i<current_pressures_.size(); i++)
+  {
+    current_pressures_[i] = (1.0 / 4.0) * (current_pressures_[i] - 1.0);
+  }
 
   //ROS_DEBUG("READ with %f hz", 1 / period.toSec());
 }
@@ -129,7 +140,6 @@ void ARLRobot::getConfigurationFromParameterServer(ros::NodeHandle nh)
       activations_.push_back(-0.3);
       tensions_filtered_.push_back(0.0);
       control_modes_.push_back(arl_hw_msgs::MuscleCommand::CONTROL_MODE_BY_ACTIVATION);
-      last_activations_.push_back(0.0);
       muscle_index_map_[name] = i;
     }
     catch (...)
@@ -166,7 +176,7 @@ void ARLRobot::getConfigurationFromParameterServer(ros::NodeHandle nh)
         analog_input_names_.push_back(name);
         int controller_board = analog_inputs[i]["controller_board"];
         int controller_channel = analog_inputs[i]["controller_channel"];
-        analog_input_indicies_.push_back((controller_board * 32) + controller_channel);
+        analog_input_indices_.push_back((controller_board * 32) + controller_channel);
         analog_input_values_.push_back(0.0);
         analog_input_publish_.push_back(analog_inputs[i]["publish_muscle"]);
       }

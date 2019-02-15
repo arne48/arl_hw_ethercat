@@ -135,11 +135,10 @@ private:
   std::vector<double> activations_; /**< Internal datastructure which contains all normalized muscle's activation values */
   std::vector<double> tensions_filtered_;
   std::vector<uint8_t> control_modes_;
-  std::vector<double> last_activations_; /**< Internal datastructure last activation values to prevent wasting time on setting the same value multiple times */
   std::map<std::string, unsigned int> muscle_index_map_;
 
   std::vector<double> analog_input_values_;
-  std::vector<int> analog_input_indicies_;
+  std::vector<int> analog_input_indices_;
   std::vector<bool> analog_input_publish_;
 
 };
