@@ -34,7 +34,6 @@ void ARLRobot::initialize(ros::NodeHandle nh)
 
   registerInterface(&muscle_interface);
 
-  //TODO
   if (ec_master_->initialize(driver_config.ethercat_iface_name))
   {
     initialized_ = true;
@@ -48,7 +47,6 @@ void ARLRobot::initialize(ros::NodeHandle nh)
 
 void ARLRobot::close()
 {
-  //TODO
   ec_master_->close();
 }
 

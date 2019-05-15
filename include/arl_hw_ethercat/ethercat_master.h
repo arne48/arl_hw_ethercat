@@ -15,7 +15,7 @@
 #define PRESSURE_OFFSET 0
 #define PRESSURE_LEN 2
 #define TENSION_OFFSET 64
-#define TENSION_LEN 4
+#define TENSION_LEN 2
 
 
 class EtherCATMaster {

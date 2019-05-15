@@ -35,8 +35,7 @@ void EtherCATMaster::read(std::vector<double> &current_voltages, std::vector<dou
         for (int input_idx_tension = TENSION_OFFSET; input_idx_tension < TENSION_OFFSET + (CONTROLLER_CHANNELS * TENSION_LEN); input_idx_tension += TENSION_LEN)
         {
           int pos = ((slave_idx-1)*CONTROLLER_CHANNELS) + ((input_idx_tension - TENSION_OFFSET) / TENSION_LEN);
-          tensions[pos] = ec_slave[slave_idx].inputs[input_idx_tension] | ec_slave[slave_idx].inputs[input_idx_tension + 1] << 8 |
-                          ec_slave[slave_idx].inputs[input_idx_tension + 2] << 16 | ec_slave[slave_idx].inputs[input_idx_tension + 3] << 24;
+          tensions[pos] = ec_slave[slave_idx].inputs[input_idx_tension] | ec_slave[slave_idx].inputs[input_idx_tension + 1] << 8;
           //ROS_INFO("Tension %d: %04X", (input_idx_tension - TENSION_OFFSET) / TENSION_LEN,
           //         ec_slave[slave_idx].inputs[input_idx_tension] | ec_slave[slave_idx].inputs[input_idx_tension + 1] << 8 | ec_slave[slave_idx].inputs[input_idx_tension + 2] << 16 | ec_slave[slave_idx].inputs[input_idx_tension + 3] << 24);
         }
@@ -85,7 +84,7 @@ bool EtherCATMaster::initialize(std::string iface)
 
   if (ec_config_init(FALSE) <= 0)
   {
-    ROS_ERROR("EtherCAT master couldn't find slaves!");
+    ROS_ERROR("EtherCAT master couldn't find slave(s)!");
     return false;
   }
 
